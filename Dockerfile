@@ -15,11 +15,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY handler.py .
 
-ENV MODEL_NAME="Qwen/Qwen3-32B"        # Which AI model to load
-ENV MAX_LENGTH="4096"                  # Maximum tokens to generate per request
-ENV TEMPERATURE="0.7"                  # Default randomness level (0-1)
-ENV TOP_P="0.9"                       # Nucleus sampling parameter (0-1)
-ENV TOP_K="50"                        # Top-k sampling parameter
-ENV PYTHONPATH="/app"                  # Ensure Python can find our modules
+ENV MODEL_NAME="Qwen/Qwen3-32B"       
+ENV MAX_LENGTH="4096"               
+ENV TEMPERATURE="0.7"                 
+ENV TOP_P="0.9"                    
+ENV TOP_K="50"                       
+ENV PYTHONPATH="/app"                 
 EXPOSE 8000
 CMD ["python", "handler.py"]
