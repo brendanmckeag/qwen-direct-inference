@@ -1,13 +1,7 @@
 
-FROM runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04
+FROM python:3.9-slim
 
 WORKDIR /app
-
-RUN apt-get update && apt-get install -y \
-    git \
-    wget \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 
