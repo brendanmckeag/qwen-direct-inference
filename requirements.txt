@@ -1,0 +1,41 @@
+# =============================================================================
+# PYTHON DEPENDENCIES FOR QWEN RUNPOD SERVERLESS ENDPOINT
+# =============================================================================
+# This file lists all the Python packages needed to run our serverless function.
+# Each package serves a specific purpose in our AI inference pipeline.
+
+# CORE RUNPOD FRAMEWORK
+# The main RunPod SDK that handles serverless function lifecycle
+runpod>=1.5.0
+
+# DEEP LEARNING FRAMEWORK
+# PyTorch is the underlying ML framework that runs our AI model
+torch>=2.1.0
+
+# HUGGING FACE TRANSFORMERS
+# Provides easy-to-use interfaces for loading and running transformer models
+transformers>=4.36.0
+
+# MODEL OPTIMIZATION
+# Accelerate helps optimize model loading and inference, especially for large models
+accelerate>=0.24.0
+
+# ATTENTION OPTIMIZATION
+# Flash Attention 2 provides much faster attention computation on modern GPUs
+flash-attn>=2.4.0
+
+# TOKENIZATION SUPPORT
+# SentencePiece tokenizer used by many modern language models including Qwen
+sentencepiece>=0.1.99
+
+# DATA SERIALIZATION
+# Protocol Buffers for efficient data serialization (used by some model formats)
+protobuf>=3.20.0
+
+# NUMERICAL COMPUTING
+# NumPy provides fundamental array operations that PyTorch and transformers depend on
+numpy>=1.24.0
+
+# HUGGING FACE HUB
+# Client library for downloading models and datasets from Hugging Face Hub
+huggingface-hub>=0.19.0
