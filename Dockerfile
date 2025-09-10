@@ -7,6 +7,11 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN apt-get update && apt-get install -y \
+    git \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+  
 COPY handler.py .
 
 ENV MODEL_NAME="Qwen/Qwen3-32B"       
