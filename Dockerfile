@@ -11,7 +11,7 @@ RUN pip install --upgrade pip
 # Install packages directly (no requirements.txt)
 RUN pip install --no-cache-dir \
     runpod==1.5.1 \
-    transformers==4.35.2 \
+    transformers==4.45.0 \
     accelerate==0.24.1 \
     sentencepiece==0.1.99 \
     protobuf==3.20.3 \
