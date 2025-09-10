@@ -8,15 +8,15 @@ RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 # Upgrade pip
 RUN pip install --upgrade pip
 
-# Install packages directly (no requirements.txt)
+# Install packages with compatible versions
 RUN pip install --no-cache-dir \
     runpod==1.5.1 \
-    transformers==4.45.0 \
+    transformers==4.51.0 \
     accelerate==0.24.1 \
     sentencepiece==0.1.99 \
     protobuf==3.20.3 \
     numpy==1.24.3 \
-    huggingface-hub==0.19.4
+    huggingface-hub>=0.23.2
 
 # Copy handler
 COPY handler.py .
