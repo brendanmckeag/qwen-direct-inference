@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Environment variables
-MODEL_NAME = os.environ.get("MODEL_NAME", "Qwen/Qwen3-32B")
+MODEL_NAME = os.environ.get("MODEL_NAME", "Qwen/Qwen3-1.7B")
 MAX_LENGTH = int(os.environ.get("MAX_LENGTH", "4096"))
 TEMPERATURE = float(os.environ.get("TEMPERATURE", "0.7"))
 TOP_P = float(os.environ.get("TOP_P", "0.9"))
