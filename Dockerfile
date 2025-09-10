@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY handler.py .
 
-ENV MODEL_NAME="Qwen/Qwen3-32B"       
+ENV MODEL_NAME="Qwen/Qwen3-1.7B"       
 ENV MAX_LENGTH="4096"               
 ENV TEMPERATURE="0.7"                 
 ENV TOP_P="0.9"                    
