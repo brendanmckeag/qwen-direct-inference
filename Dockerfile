@@ -22,7 +22,6 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Try to install flash-attn separately (optional)
-RUN pip install flash-attn>=2.3.0 || echo "Flash-attention installation failed, continuing without it"
 
 # Copy handler
 COPY handler.py .
