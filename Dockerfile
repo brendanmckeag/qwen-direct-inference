@@ -1,24 +1,33 @@
-FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
+FROM pytorch/pytorch:2.2.0-cuda12.1-cudnn8-runtime
 
 WORKDIR /app
 
-# Install git
-RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
 # Upgrade pip
 RUN pip install --upgrade pip
 
-# Install specific compatible versions
-RUN pip install --no-cache-dir \
-    "transformers==4.35.2" \
-    runpod \
-    accelerate
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy handler
 COPY handler.py .
 
-# Environment variables - Use a model that works with older transformers
-ENV MODEL_NAME="microsoft/DialoGPT-medium"
+# Environment variables for Qwen3-8B
+ENV MODEL_NAME="Qwen/Qwen3-8B"
+ENV MAX_NEW_TOKENS="2048"
+ENV TEMPERATURE="0.7"
+ENV TOP_P="0.9"
+ENV TOP_K="50"
+ENV ENABLE_THINKING="true"
 ENV PYTHONPATH="/app"
+
+# Set CUDA memory fraction to avoid OOM
+ENV PYTORCH_CUDA_ALLOC_CONF="max_split_size_mb:128"
 
 CMD ["python", "handler.py"]
