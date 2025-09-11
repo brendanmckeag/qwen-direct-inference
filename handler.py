@@ -35,12 +35,22 @@ class Qwen3Handler:
             # Load tokenizer
             self.tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
             
+            # Model loading configuration
+            model_kwargs = {
+                "torch_dtype": "auto",
+                "device_map": "auto",
+                "low_cpu_mem_usage": True
+            }
+            
+            # Use flash-attention if available
+            if FLASH_ATTN_AVAILABLE:
+                model_kwargs["attn_implementation"] = "flash_attention_2"
+                logger.info("Using flash-attention for faster inference")
+            
             # Load model
             self.model = AutoModelForCausalLM.from_pretrained(
                 MODEL_NAME,
-                torch_dtype="auto",
-                device_map="auto",
-                low_cpu_mem_usage=True
+                **model_kwargs
             )
             
             logger.info("Qwen3 model loaded successfully")
