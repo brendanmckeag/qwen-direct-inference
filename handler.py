@@ -9,13 +9,13 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Environment variables
-MODEL_NAME = os.environ.get("MODEL_NAME", "Qwen/Qwen3-1.7B")
-MAX_LENGTH = int(os.environ.get("MAX_LENGTH", "4096"))
+MODEL_NAME = os.environ.get("MODEL_NAME", "microsoft/DialoGPT-medium")
+MAX_LENGTH = int(os.environ.get("MAX_LENGTH", "1000"))
 TEMPERATURE = float(os.environ.get("TEMPERATURE", "0.7"))
 TOP_P = float(os.environ.get("TOP_P", "0.9"))
 TOP_K = int(os.environ.get("TOP_K", "50"))
 
-class QwenInferenceHandler:
+class DialoGPTHandler:
     def __init__(self):
         self.model = None
         self.tokenizer = None
@@ -32,21 +32,16 @@ class QwenInferenceHandler:
             logger.info(f"Using device: {self.device}")
             
             # Load tokenizer
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                MODEL_NAME,
-                trust_remote_code=True
-            )
+            self.tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
             
-            # Ensure pad token is set
-            if self.tokenizer.pad_token is None:
-                self.tokenizer.pad_token = self.tokenizer.eos_token
+            # Set pad token for DialoGPT
+            self.tokenizer.pad_token = self.tokenizer.eos_token
             
-            # Load model with basic settings
+            # Load model
             self.model = AutoModelForCausalLM.from_pretrained(
                 MODEL_NAME,
                 torch_dtype=torch.float16,
                 device_map="auto",
-                trust_remote_code=True,
                 low_cpu_mem_usage=True
             )
             
@@ -56,8 +51,8 @@ class QwenInferenceHandler:
             logger.error(f"Failed to load model: {e}")
             raise e
     
-    def generate_response(self, prompt: str, **kwargs) -> str:
-        """Generate response from the model"""
+    def generate_response(self, prompt: str, conversation_history: list = None, **kwargs) -> str:
+        """Generate response from DialoGPT"""
         try:
             # Get generation parameters
             max_length = kwargs.get('max_length', MAX_LENGTH)
@@ -66,31 +61,47 @@ class QwenInferenceHandler:
             top_k = kwargs.get('top_k', TOP_K)
             do_sample = kwargs.get('do_sample', True)
             
-            # Tokenize input
-            inputs = self.tokenizer.encode(prompt, return_tensors="pt").to(self.device)
-            input_length = inputs.shape[1]
+            # Build conversation context for DialoGPT
+            if conversation_history:
+                # Include conversation history
+                conversation_text = ""
+                for turn in conversation_history[-5:]:  # Keep last 5 turns
+                    conversation_text += turn + self.tokenizer.eos_token
+                conversation_text += prompt + self.tokenizer.eos_token
+            else:
+                # Single turn conversation
+                conversation_text = prompt + self.tokenizer.eos_token
             
-            # Calculate max new tokens
-            max_new_tokens = min(max_length - input_length, 1024)
-            if max_new_tokens <= 0:
-                return "Error: Input prompt is too long"
+            # Tokenize
+            inputs = self.tokenizer.encode(
+                conversation_text, 
+                return_tensors="pt",
+                truncate=True,
+                max_length=max_length - 100  # Leave room for generation
+            ).to(self.device)
+            
+            input_length = inputs.shape[1]
             
             # Generate
             with torch.no_grad():
                 outputs = self.model.generate(
                     inputs,
-                    max_new_tokens=max_new_tokens,
+                    max_length=min(input_length + 200, max_length),
                     temperature=temperature,
                     top_p=top_p,
                     top_k=top_k,
                     do_sample=do_sample,
-                    pad_token_id=self.tokenizer.pad_token_id,
+                    pad_token_id=self.tokenizer.eos_token_id,
                     eos_token_id=self.tokenizer.eos_token_id,
-                    repetition_penalty=1.1
+                    repetition_penalty=1.1,
+                    no_repeat_ngram_size=3  # Avoid repetition
                 )
             
-            # Decode response
-            response = self.tokenizer.decode(outputs[0][input_length:], skip_special_tokens=True)
+            # Decode only the new tokens
+            response = self.tokenizer.decode(
+                outputs[0][input_length:], 
+                skip_special_tokens=True
+            )
             
             # Clear CUDA cache
             if torch.cuda.is_available():
@@ -105,10 +116,10 @@ class QwenInferenceHandler:
             return f"Error during generation: {str(e)}"
 
 # Initialize handler
-print("🚀 Initializing model handler...")
+print("🚀 Initializing DialoGPT handler...")
 try:
-    handler = QwenInferenceHandler()
-    print("✅ Model handler ready!")
+    handler = DialoGPTHandler()
+    print("✅ DialoGPT handler ready!")
 except Exception as e:
     print(f"❌ Failed to initialize: {e}")
     handler = None
@@ -121,6 +132,7 @@ def inference(job: Dict[str, Any]) -> Dict[str, Any]:
         
         job_input = job.get("input", {})
         prompt = job_input.get("prompt", "")
+        conversation_history = job_input.get("conversation_history", [])
         
         if not prompt:
             return {"error": "No prompt provided", "status": "error"}
@@ -134,7 +146,11 @@ def inference(job: Dict[str, Any]) -> Dict[str, Any]:
             "do_sample": job_input.get("do_sample", True)
         }
         
-        response = handler.generate_response(prompt, **params)
+        response = handler.generate_response(
+            prompt, 
+            conversation_history=conversation_history,
+            **params
+        )
         
         return {
             "output": {
